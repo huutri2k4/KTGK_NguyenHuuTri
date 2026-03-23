@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Trang chủ - Học phần</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/home text-primary">COURSE REG</a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/home">Trang chủ</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('STUDENT')">
+                    <a class="nav-link text-info" href="/my-courses">Môn học của tôi</a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link text-warning" href="/admin/courses">Quản lý hệ thống</a>
+                </li>
+            </ul>
+
+            <form class="d-flex mx-auto" action="/home" method="get" style="width: 40%;">
+                <input class="form-control me-2" type="search" name="keyword" th:value="${keyword}" placeholder="Tìm tên môn học...">
+                <button class="btn btn-outline-success" type="submit"><i class="fas fa-search"></i></button>
+            </form>
+
+            <ul class="navbar-nav ms-3">
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="btn btn-outline-light btn-sm" href="/login">Đăng nhập</a>
+                </li>
+
+                <li class="nav-item d-flex align-items-center" sec:authorize="isAuthenticated()">
+                    <span class="text-light me-3 small">
+                        Chào, <strong class="text-white" sec:authentication="name">User</strong>
+                        <span class="badge bg-primary ms-1" sec:authorize="hasRole('ADMIN')">ADMIN</span>
+                        <span class="badge bg-success ms-1" sec:authorize="hasRole('STUDENT')">SINH VIÊN</span>
+                    </span>
+                    <form th:action="@{/logout}" method="post" class="m-0">
+                        <button class="btn btn-danger btn-sm" type="submit">Thoát</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div th:if="${message}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-check-circle me-2"></i> <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4" th:each="course : ${courses}">
+            <div class="card h-100 shadow-sm border-0">
+                <img th:src="${course.image}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="Course image">
+                <div class="card-body text-center d-flex flex-column">
+                    <h5 class="card-title fw-bold" th:text="${course.name}"></h5>
+                    <p class="card-text text-muted mb-1">Tín chỉ: <span class="badge bg-secondary" th:text="${course.credits}"></span></p>
+                    <p class="card-text text-muted">GV: <span th:text="${course.lecturer}"></span></p>
+
+                    <div class="mt-auto">
+                        <a th:href="@{/enroll/{id}(id=${course.id})}"
+                           class="btn btn-primary w-100 py-2"
+                           sec:authorize="hasAnyRole('STUDENT', 'ANONYMOUS')">
+                            <i class="fas fa-plus-circle me-1"></i> Enroll Course
+                        </a>
+                        <span sec:authorize="hasRole('ADMIN')" class="text-muted small">Quyền Admin (Không được đăng ký)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav th:if="${totalPages > 0}" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${currentPage == i} ? 'active'">
+                <a class="page-link" th:href="@{/home(page=${i}, keyword=${keyword})}" th:text="${i + 1}"></a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
